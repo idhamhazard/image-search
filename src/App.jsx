@@ -83,7 +83,7 @@ function App() {
       </header>
 
       <section className="max-w-6xl w-full mx-auto mt-4 px-4 lg:px-0">
-        <p className="text-lg">Showing results for {searchImage}</p>
+        <p className="text-lg">Showing results for <span className="text-blue-600">{searchImage}</span> </p>
         <p className="font-medium text-sm text-slate-500">Total {totalImages} Images have been found </p>
         {loading ? <p className="font-medium text-2xl">Loading...</p> : null}
         <div className="grid gap-2 grid-cols-1 md:grid-cols-3 lg:grid-cols-4 mt-2">
