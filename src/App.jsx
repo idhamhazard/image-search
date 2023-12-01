@@ -5,20 +5,29 @@ import axios from "axios";
 function App() {
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState([]);
-  const [searchImage, setSearchImage] = useState("")
+  const [searchImage, setSearchImage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalImages, setTotalImages] = useState("");
 
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const apiKey = import.meta.env.VITE_API_KEY;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const allPages = 20;
+
+  useEffect(() => {
+    fetchData();
+  }, [page]);
+
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${baseUrl}/search/photos?page=1&query=${search}&client_id=${apiKey}`);
+      const response = await axios.get(`${baseUrl}/search/photos?&query=${search}&page=${page}&per_page=${allPages}&client_id=${apiKey}`);
       setQuery(response.data.results);
-      setSearchImage(search)
-      setSearch("")
+      setTotalImages(response.data.total);
+      setTotalPages(response.data.total_pages);
+      setSearchImage(search);
     } catch (err) {
       console.log("error", err);
     } finally {
@@ -26,16 +35,43 @@ function App() {
     }
   };
 
+  const resetPage = () => {
+    setPage(1);
+    fetchData();
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetchData();
+    resetPage();
+  };
+  const scrollTop = () => {
+    scrollTo({
+      behavior: "smooth",
+      top: 0,
+    });
+  };
+
+  const handlePrevPage = () => {
+    setPage((state) => state - 1);
+    scrollTop();
+  };
+
+  const handleNextPage = () => {
+    setPage((state) => state + 1);
+    scrollTop();
+  };
+
   return (
     <>
       <header className="bg-primary h-44 flex items-center">
         <div className="container">
           <div className="flex justify-center mb-2">
-            <h1 className="text-white">Image Search</h1>
+            <h1 className="text-white">The Powerful Search engine</h1>
           </div>
           <div className="flex justify-center">
-            <form action="" className="max-w-md w-full relative" onSubmit={handleSubmit}>
-              <input type="text" placeholder="Search Image..." className="w-full py-2 px-4 rounded-md text-sm focus:outline-none border-2 focus:border-blue-500" onChange={(e) => setSearch(e.target.value)} value={search} />
+            <form action="" className="max-w-lg w-full relative" onSubmit={handleSubmit}>
+              <input type="text" placeholder="Search Image..." className="w-full py-2 px-4 rounded-md text-sm focus:outline-none border-2 focus:border-blue-500" onChange={(e) => setSearch(e.target.value)} />
               <button className="absolute top-2 end-2">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -46,17 +82,38 @@ function App() {
         </div>
       </header>
 
-      <section className="max-w-6xl w-full mx-auto mt-4">
-        <p className="underline">Results for {searchImage}</p>
+      <section className="max-w-6xl w-full mx-auto mt-4 px-4 lg:px-0">
+        <p className="text-lg">Showing results for {searchImage}</p>
+        <p className="font-medium text-sm text-slate-500">Total {totalImages} Images have been found </p>
         {loading ? <p className="font-medium text-2xl">Loading...</p> : null}
         <div className="grid gap-2 grid-cols-1 md:grid-cols-3 lg:grid-cols-4 mt-2">
           {query.map((e) => {
             return (
               <a href={e.urls.regular} target="_blank" key={e.id}>
-                <img className="h-72 w-full object-cover rounded-lg shadow-md" src={e.urls.small} alt="" />
+                <img className="h-52 w-full object-cover shadow-md" src={e.urls.small} alt="" />
               </a>
             );
           })}
+        </div>
+        <div className="flex justify-center items-center mt-4 gap-4 py-4">
+          {page > 1 && (
+            <button className="bg-primary py-2 px-6 text-white rounded-lg" onClick={handlePrevPage}>
+              {" "}
+              Prev Page
+            </button>
+          )}
+
+          {(page > 1) & (page <= totalPages) ? (
+            <p className="text-sm font-medium">
+              Page {page} of {totalPages}
+            </p>
+          ) : null}
+
+          {page < totalPages && (
+            <button className="bg-primary py-2 px-6 text-white rounded-lg" onClick={handleNextPage}>
+              Next Page
+            </button>
+          )}
         </div>
       </section>
     </>
